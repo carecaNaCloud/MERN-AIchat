@@ -5,7 +5,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userLogin = exports.userSignup = exports.getAllUsers = void 0;
 const User_1 = __importDefault(require("./../models/User"));
+const ms_1 = __importDefault(require("ms"));
 const bcrypt_1 = require("bcrypt");
+const token_manager_1 = require("../utils/token-manager");
+const constants_1 = require("../utils/constants");
 const getAllUsers = async (req, res, next) => {
     try {
         const users = await User_1.default.find();
@@ -29,6 +32,20 @@ const userSignup = async (req, res, next) => {
         // await user.save();
         const location = 'Location: '.concat(`${req.baseUrl}/${user._id}`);
         res.set({ location });
+        // create token and store cookies
+        res.clearCookie(constants_1.AUTH_COOKIE, {
+            domain: "localhost",
+            path: "/",
+            httpOnly: true,
+            signed: true,
+        });
+        const token = (0, token_manager_1.createToken)(user._id.toString(), user.email, "7d");
+        const expires = new Date(Date.now() + (0, ms_1.default)("7d"));
+        res.cookie(constants_1.AUTH_COOKIE, token, {
+            httpOnly: true,
+            signed: true,
+            expires
+        });
         res.status(201).json(user);
     }
     catch (error) {
@@ -48,6 +65,19 @@ const userLogin = async (req, res, next) => {
         if (!isPasswordCorrect) {
             return res.status(401).send("Email or password incorrect");
         }
+        res.clearCookie(constants_1.AUTH_COOKIE, {
+            domain: "localhost",
+            path: "/",
+            httpOnly: true,
+            signed: true,
+        });
+        const token = (0, token_manager_1.createToken)(user._id.toString(), user.email, "7d");
+        const expires = new Date(Date.now() + (0, ms_1.default)("7d"));
+        res.cookie(constants_1.AUTH_COOKIE, token, {
+            httpOnly: true,
+            signed: true,
+            expires
+        });
         return res.status(200).send();
     }
     catch (error) {

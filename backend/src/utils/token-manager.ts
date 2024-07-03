@@ -1,7 +1,7 @@
-import crypto from 'crypto';
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
-const createToken = (id: string, email: string, exiresIn) {
-  const payload = {id, email};
-  const toket = jwt.sign
-}
+export const createToken = (id: string, email: string, expiresIn: string | number) => {
+  const payload = { id, email };
+  const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn });
+  return token;
+};
