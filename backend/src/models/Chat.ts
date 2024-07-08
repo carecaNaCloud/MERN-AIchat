@@ -1,20 +1,17 @@
-import mongoose from 'mongoose';
-import {randomUUID} from 'crypto';
+import mongoose from "mongoose";
 const { Schema } = mongoose;
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
-const Chat = new Schema({
-  id: {
+const Chat = new Schema<ChatCompletionMessageParam>({
+  role: {
     type: String,
-    default: randomUUID()
+    enum: ["system", "user", "assistant", "tool", "function"],
+    require: true,
   },
-  role: { 
-    type: String,
-    require: true
-  }, 
   content: {
     type: String,
-    required: true
-  }
-})
+    required: true,
+  },
+});
 
 export default Chat;

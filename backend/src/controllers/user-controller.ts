@@ -5,7 +5,7 @@ import { hash, compare } from "bcrypt";
 import { createToken } from "../utils/token-manager";
 import { AUTH_COOKIE } from "../utils/constants";
 
-const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+const getAllUsers = async (req: Request, res: Response, next: NextFunction) =>{
   try {
     const users = await User.find();
     res.status(200).json({users});
@@ -25,26 +25,22 @@ const userSignup = async (req: Request, res: Response, next: NextFunction) => {
     }
 
     const hashedPassword = await hash(password, 13);
-    
     const user = new User({ name, email, password: hashedPassword });
-    
+   
     // await user.save();
     const location = 'Location: '.concat(`${req.baseUrl}/${user._id}`); 
     res.set({location});
 
-    // create token and store cookies
+    // create token and store in cookies
     res.clearCookie(AUTH_COOKIE, {
-      domain: "localhost",
-      path: "/",
       httpOnly: true,
       signed: true,
     });
     const token = createToken(user._id.toString(), user.email, "7d");
-    const expires = new Date(Date.now() + ms("7d"));
     res.cookie(AUTH_COOKIE, token, {
       httpOnly: true,
       signed: true,
-      expires 
+      expires: new Date(Date.now() + ms("7d"))
     });
 
     res.status(201).json(user);
@@ -74,22 +70,38 @@ const userLogin = async (req: Request, res: Response, next: NextFunction) => {
       signed: true,
     });
     const token = createToken(user._id.toString(), user.email, "7d");
-    const expires = new Date(Date.now() + ms("7d"));
     res.cookie(AUTH_COOKIE, token, {
       httpOnly: true,
       signed: true,
-      expires 
+      expires: new Date(Date.now() + ms("7d"))
     });
 
 
-    return res.status(200).send()
+    return res.status(200).send({email: user.email, name: user.name})
   } catch (error) {
     console.log (error)
     return res.status(500).json({message: 'ERROR', cause: error.message});
   }
 }
 
+const verifyUser = async (
+  req: Request, 
+  res: Response, 
+  next: NextFunction
+) => {
+  try {
+    const user = await User.findById(res.locals.jwtData.id);
+    if (!user) {
+      return res.status(401).send("User not authorized, please login");
+    }
+    return res
+        .status(200)
+        .json({ message: "OK", name: user.name, email: user.email });
+  } catch (error) {
+    console.log(error);
+    return res.status(200).json({ message: "ERROR", cause: error.message });
+  }
+}
 
 
-
-export { getAllUsers, userSignup, userLogin };
+export { getAllUsers, userSignup, userLogin, verifyUser };

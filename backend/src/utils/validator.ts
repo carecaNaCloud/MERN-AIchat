@@ -10,7 +10,6 @@ export const validate = (validations: ValidationChain[]) => {
         return res.status(422).json({ errors: result.array() });
       }
     }
-
     next();
   };
 };
@@ -25,3 +24,7 @@ export const signupValidator = [
   body("name").trim().notEmpty().withMessage('Name is required'),
   ...loginValidator
 ];
+
+export const chatCompletion = [
+  body("message").notEmpty().withMessage("It's a conversation, please text me!")
+]
